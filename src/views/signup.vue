@@ -16,7 +16,7 @@
         class="demo-ruleForm space-y-6"
       >
         <el-form-item label="Email address" prop="email" class="block text-sm font-medium leading-6 text-gray-900">
-          <el-input v-model="ruleForm.email" type="text" autocomplete="off" />
+          <el-input v-model="ruleForm.email" type="text" autocomplete="off" placeholder="anly@web-crunch.com"/>
         </el-form-item>
         <el-form-item label="Password" prop="pass" class="block text-sm font-medium leading-6 text-gray-900">
           <el-input v-model="ruleForm.pass" type="password" autocomplete="off" />
@@ -45,7 +45,10 @@
 
 <script setup lang='ts'>
 import { ref, reactive } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
+import { securedInstance, instance } from "@/api/request";
+import type { FormInstance, FormRules, ElMessage } from 'element-plus'
+import { useRouter } from "vue-router";
+const router = useRouter()
 
 const ruleFormRef = ref<FormInstance>()
 const ruleForm = reactive({
@@ -94,11 +97,43 @@ const rules = reactive<FormRules>({
   email: [{ validator: checemail, trigger: 'blur' }],
 })
 
+const signup = () =>{
+  instance.post('/signup', { eamil: ruleForm.email, password: ruleForm.pass, password_confirmation: ruleForm.checkPass})
+          .then(response=>signupSeccessful(response))
+          .catch((error=>signupFalse(error)))
+}
+const signupSeccessful = (res)=>{
+  if(!res.data.csrf){
+    signupFalse(res)
+
+  }else{
+    localStorage.csrf = res.data.csrf
+    localStorage.signin = true
+    err = ''
+    ElMessage({
+    showClose: true,
+    message: 'signup seccessful!',
+    type: 'success',
+  })
+    router.replace('/')
+  }
+}
+let err = ''
+const signupFalse = (error)=>{
+  err = (error.response && error.response.data && error.response.data.error) || ''
+  delete localStorage.csrf
+  delete localStorage.signin
+  ElMessage({
+    showClose: true,
+    message: err,
+    type: 'error',
+  })
+}
 const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  formEl.validate((valid) => {
+  formEl.validate((valid:any) => {
     if (valid) {
-      console.log(ruleForm)
+      signup()
     } else {
       console.log('error submit!')
       return false

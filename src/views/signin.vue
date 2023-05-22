@@ -34,9 +34,12 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-
+import { ElMessage } from "element-plus";
+import { securedInstance, instance } from "@/api/request";
+import { useRouter } from "vue-router";
+const router = useRouter()
 const ruleFormRef = ref<FormInstance>()
 const ruleForm = reactive({
   pass: '',
@@ -50,7 +53,7 @@ const ruleForm = reactive({
   }
 }
 
-const checemail = (rule: any, value: any, callback: any)=>{
+const checekmail = (rule: any, value: any, callback: any)=>{
   if(!value){
     callback(new Error('Please input the email again'))
   }
@@ -67,14 +70,57 @@ const rules = reactive<FormRules>({
   pass: [{ validator: validatePass, trigger: 'blur' },
     { min: 6, max: 12, message: 'Length should be 6 to 12', trigger: 'blur' },
   ],
-  email: [{ validator: checemail, trigger: 'blur' }],
+  email: [{ validator: checekmail, trigger: 'blur' }],
 })
 
+onMounted(() => {
+  cheachSignin()
+});
+onUnmounted(()=>{
+  cheachSignin()
+})
+const signin = ()=>{
+  instance.post('/signin', {eamil: ruleForm.email, password: ruleForm.pass})
+    .then(res=> siginSuccessful(res))
+    .catch(err=>siginFalse(err) )
+}
+const cheachSignin = ()=>{
+  if(localStorage.csrf){
+    router.replace('/')
+  }
+}
+const siginSuccessful = (response:any)=>{
+  if(!response.data.csrf){
+        siginFalse(response)
+        return
+      }else{
+        localStorage.csrf = response.data.csrf
+        localStorage.sigin = true
+        error = ''
+        ElMessage({
+        showClose: true,
+        message: 'signin seccessful!',
+        type: 'success'
+      })
+        router.replace('/')
+      }
+}
+let error:string = ''
+const siginFalse = (err:any)=>{
+  error = (err.response && err.response.data && err.response.data.error) || ''
+  delete localStorage.csrf
+  delete localStorage.sigin
+  ElMessage({
+    showClose: true,
+    message: error,
+    type: 'error',
+  })
+}
 const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
-  formEl.validate((valid) => {
+  formEl.validate((valid:any) => {
     if (valid) {
-      console.log(ruleForm)
+      signin()
     } else {
       console.log('error submit!')
       return false

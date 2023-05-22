@@ -23,4 +23,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   }
+  // server:{
+  //   // 处理跨域 只在dev 模式中有效  正式环境会无效 需要使用 其他的代理转发配置
+	// 	proxy:{
+	// 		'/api':'http://127.0.0.1:3000'
+	// 	}
+	// }
 })
