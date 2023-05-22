@@ -1,8 +1,6 @@
 <template>
 
- <div>
-  <RouterView></RouterView>
- </div>
+ <div>注册</div>
 
 </template>
 

@@ -1,8 +1,6 @@
 <template>
 
- <div>
-  <RouterView></RouterView>
- </div>
+ <div>头部</div>
 
 </template>
 
